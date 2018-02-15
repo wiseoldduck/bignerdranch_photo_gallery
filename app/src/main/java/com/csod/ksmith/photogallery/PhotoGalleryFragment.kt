@@ -10,6 +10,8 @@ import android.view.ViewGroup
 import android.os.AsyncTask
 import kotlinx.android.synthetic.main.fragment_photo_gallery.*
 import android.widget.TextView
+import android.graphics.drawable.Drawable
+import android.widget.ImageView
 
 
 class PhotoGalleryFragment : Fragment() {
@@ -39,23 +41,30 @@ class PhotoGalleryFragment : Fragment() {
     }
 
     private inner class PhotoHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val titleTextView: TextView = itemView as TextView
 
-        fun bindGalleryItem(item: GalleryItem) {
-            titleTextView.text = item.toString()
+        val imageView = itemView.findViewById(R.id.item_image_view) as? ImageView
+
+        fun bindDrawable(drawable: Drawable) {
+            imageView?.setImageDrawable(drawable)
         }
+
     }
 
     private inner class PhotoAdapter(private val galleryItems: List<GalleryItem>) : RecyclerView.Adapter<PhotoHolder>() {
 
         override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): PhotoHolder {
-            val textView = TextView(activity)
-            return PhotoHolder(textView)
+            val inflater = LayoutInflater.from(activity)
+            val view = inflater.inflate(R.layout.list_item_gallery, viewGroup, false)
+            return PhotoHolder(view)
         }
 
         override fun onBindViewHolder(photoHolder: PhotoHolder, position: Int) {
-            val galleryItem = galleryItems[position]
-            photoHolder.bindGalleryItem(galleryItem)
+            val galleryItem = items.get(position)
+            val placeholder = resources.getDrawable(R.drawable.bill_up_close,
+                    null)
+            photoHolder.bindDrawable(placeholder)
+//            mThumbnailDownloader.queueThumbnail(photoHolder, galleryItem.url)
+
         }
 
         override fun getItemCount(): Int {
