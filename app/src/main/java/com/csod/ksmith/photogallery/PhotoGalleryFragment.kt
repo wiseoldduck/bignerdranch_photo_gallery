@@ -35,13 +35,7 @@ class PhotoGalleryFragment : Fragment() {
     private inner class FetchItemsTask : AsyncTask<Void, Void, Int>() {
 
         override fun doInBackground(vararg params: Void?): Int {
-            try {
-                val result = FlickrFetchr().getUrlString("https://www.wode.com")
-                Log.i(TAG, "Fetched contents of URL: ${result.toString()}")
-                return 0
-            } catch (ioe: IOException) {
-                Log.e(TAG, "Failed to fetch URL: ${ioe.toString()}")
-            }
+            FlickrFetchr().fetchItems()
             return 0
         }
 

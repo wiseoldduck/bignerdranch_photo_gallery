@@ -1,9 +1,15 @@
 package com.csod.ksmith.photogallery
 
+import android.net.Uri
+import android.util.Log
+import org.json.JSONException
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import org.json.JSONObject
+
+
 
 
 class FlickrFetchr {
@@ -36,9 +42,34 @@ class FlickrFetchr {
         }
     }
 
+
+    fun fetchItems() {
+
+        try {
+            val url = Uri.parse("https://api.flickr.com/services/rest/")
+                    .buildUpon()
+                    .appendQueryParameter("method", "flickr.photos.getRecent")
+                    .appendQueryParameter("api_key", Private.API_KEY)
+                    .appendQueryParameter("format", "json")
+                    .appendQueryParameter("nojsoncallback", "1")
+                    .appendQueryParameter("extras", "url_s")
+                    .build().toString()
+            val jsonString = getUrlString(url)
+            Log.i(TAG, "Received JSON: " + jsonString)
+        } catch (ioe: IOException) {
+            Log.e(TAG, "Failed to fetch items", ioe)
+        }
+
+    }
+
     @Throws(IOException::class)
     fun getUrlString(urlSpec: String): String {
         return String(getUrlBytes(urlSpec))
+    }
+
+    companion object {
+        private const val TAG = "FlickrFetchr"
+        private const val API_KEY = "REPLACE_ME_WITH_A_REAL_KEY"
     }
 
 }
