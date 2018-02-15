@@ -2,14 +2,13 @@ package com.csod.ksmith.photogallery
 
 import android.net.Uri
 import android.util.Log
+import android.widget.Gallery
 import org.json.JSONException
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import org.json.JSONObject
-
-
 
 
 class FlickrFetchr {
@@ -43,9 +42,10 @@ class FlickrFetchr {
     }
 
 
-    fun fetchItems() {
-
+    fun fetchItems(): List<GalleryItem> {
+        val items = arrayListOf<GalleryItem>()
         try {
+
             val url = Uri.parse("https://api.flickr.com/services/rest/")
                     .buildUpon()
                     .appendQueryParameter("method", "flickr.photos.getRecent")
@@ -56,20 +56,41 @@ class FlickrFetchr {
                     .build().toString()
             val jsonString = getUrlString(url)
             Log.i(TAG, "Received JSON: " + jsonString)
+            val jsonBody = JSONObject(jsonString)
+            parseItems(items, jsonBody)
         } catch (ioe: IOException) {
             Log.e(TAG, "Failed to fetch items", ioe)
+        } catch (je: JSONException) {
+            Log.e(TAG, "Failed to parse JSON", je)
         }
 
+        return items
+    }
+
+    @Throws(IOException::class, JSONException::class)
+    private fun parseItems(items: MutableList<GalleryItem>, jsonBody: JSONObject) {
+
+        val photosJsonObject = jsonBody.getJSONObject("photos")
+        val photoJsonArray = photosJsonObject.getJSONArray("photo")
+
+        for (i in 0 until photoJsonArray.length()) {
+            val photoJsonObject = photoJsonArray.getJSONObject(i)
+
+            val item = GalleryItem(caption = photoJsonObject.getString("title"),
+                    id = photoJsonObject.getString("id"),
+                    url = photoJsonObject.getString("url_s"))
+
+            items.add(item)
+        }
     }
 
     @Throws(IOException::class)
-    fun getUrlString(urlSpec: String): String {
+    private fun getUrlString(urlSpec: String): String {
         return String(getUrlBytes(urlSpec))
     }
 
     companion object {
         private const val TAG = "FlickrFetchr"
-        private const val API_KEY = "REPLACE_ME_WITH_A_REAL_KEY"
     }
 
 }
