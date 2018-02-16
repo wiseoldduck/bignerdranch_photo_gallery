@@ -1,5 +1,7 @@
 package com.csod.ksmith.photogallery
 
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.GridLayoutManager
@@ -11,6 +13,8 @@ import android.os.AsyncTask
 import kotlinx.android.synthetic.main.fragment_photo_gallery.*
 import android.widget.TextView
 import android.graphics.drawable.Drawable
+import android.os.Handler
+import android.util.Log
 import android.widget.ImageView
 
 
@@ -18,11 +22,25 @@ class PhotoGalleryFragment : Fragment() {
 
     private var photoRecyclerView: RecyclerView? = null
     private var items: List<GalleryItem> = listOf()
+    private lateinit var downloader: ThumbnailDownloader<PhotoHolder>
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         retainInstance = true
         FetchItemsTask().execute()
+
+        val handler = Handler()
+        downloader = ThumbnailDownloader(handler, listener =
+        object : ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder> {
+            override fun onThumbnailDownloaded(target: PhotoHolder, bitmap: Bitmap) {
+                target.bindDrawable(BitmapDrawable(resources, bitmap))
+            }
+        })
+
+        downloader.start()
+        downloader.looper
+        Log.i(TAG, "Background thread started")
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -32,6 +50,12 @@ class PhotoGalleryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         photo_recycler_view?.layoutManager = GridLayoutManager(activity, 3)
+        setupAdapter()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        downloader.clearQueue()
     }
 
     private fun setupAdapter() {
@@ -63,8 +87,7 @@ class PhotoGalleryFragment : Fragment() {
             val placeholder = resources.getDrawable(R.drawable.bill_up_close,
                     null)
             photoHolder.bindDrawable(placeholder)
-//            mThumbnailDownloader.queueThumbnail(photoHolder, galleryItem.url)
-
+            downloader.queueThumbnail(photoHolder, galleryItem.url)
         }
 
         override fun getItemCount(): Int {
@@ -79,16 +102,16 @@ class PhotoGalleryFragment : Fragment() {
         }
 
         /** <p>Runs on the UI thread after {@link #doInBackground}. The
-        * specified result is the value returned by {@link #doInBackground}.</p>
-        *
-        * <p>This method won't be invoked if the task was cancelled.</p>
-        *
-        * @param result The result of the operation computed by {@link #doInBackground}.
-        *
-        * @see #onPreExecute
-        * @see #doInBackground
-        * @see #onCancelled(Object)
-        */
+         * specified result is the value returned by {@link #doInBackground}.</p>
+         *
+         * <p>This method won't be invoked if the task was cancelled.</p>
+         *
+         * @param result The result of the operation computed by {@link #doInBackground}.
+         *
+         * @see #onPreExecute
+         * @see #doInBackground
+         * @see #onCancelled(Object)
+         */
         override fun onPostExecute(result: List<GalleryItem>) {
             items = result
             setupAdapter()
@@ -97,6 +120,6 @@ class PhotoGalleryFragment : Fragment() {
     }
 
     companion object {
-        private val     TAG = "PhotoGalleryFragment"
+        private val TAG = "PhotoGalleryFragment"
     }
 }
