@@ -1,7 +1,5 @@
 package com.csod.ksmith.photogallery
 
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.GridLayoutManager
@@ -11,18 +9,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.os.AsyncTask
 import kotlinx.android.synthetic.main.fragment_photo_gallery.*
-import android.widget.TextView
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Handler
 import android.util.Log
 import android.widget.ImageView
+import com.squareup.picasso.Picasso
 
 
 class PhotoGalleryFragment : Fragment() {
 
     private var photoRecyclerView: RecyclerView? = null
     private var items: List<GalleryItem> = listOf()
-    private lateinit var downloader: ThumbnailDownloader<PhotoHolder>
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -31,15 +29,6 @@ class PhotoGalleryFragment : Fragment() {
         FetchItemsTask().execute()
 
         val handler = Handler()
-        downloader = ThumbnailDownloader(handler, listener =
-        object : ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder> {
-            override fun onThumbnailDownloaded(target: PhotoHolder, bitmap: Bitmap) {
-                target.bindDrawable(BitmapDrawable(resources, bitmap))
-            }
-        })
-
-        downloader.start()
-        downloader.looper
         Log.i(TAG, "Background thread started")
     }
 
@@ -55,7 +44,6 @@ class PhotoGalleryFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        downloader.clearQueue()
     }
 
     private fun setupAdapter() {
@@ -82,12 +70,18 @@ class PhotoGalleryFragment : Fragment() {
             return PhotoHolder(view)
         }
 
+
         override fun onBindViewHolder(photoHolder: PhotoHolder, position: Int) {
             val galleryItem = items.get(position)
-            val placeholder = resources.getDrawable(R.drawable.bill_up_close,
-                    null)
-            photoHolder.bindDrawable(placeholder)
-            downloader.queueThumbnail(photoHolder, galleryItem.url)
+
+            Picasso.with(activity).load(Uri.parse(galleryItem.url))
+                    .placeholder(R.drawable.bill_up_close).into(photoHolder.imageView)
+
+
+//            val placeholder = resources.getDrawable(R.drawable.bill_up_close,
+//                    null)
+//            photoHolder.bindDrawable(placeholder)
+//            downloader.queueThumbnail(photoHolder, galleryItem.url)
         }
 
         override fun getItemCount(): Int {
